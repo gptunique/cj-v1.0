@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CJ대한통운 대량조회 (서버사이드 버전)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+body {font-family:'Malgun Gothic',sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);margin:0;padding:20px;}
+.container {max-width:1100px;margin:20px auto;background:white;border-radius:15px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,0.2);}
+.header {background:#E60012;color:white;padding:25px;text-align:center;font-size:28px;border-radius:10px;margin-bottom:25px;}
+.header small {display:block;font-size:14px;margin-top:8px;opacity:0.9;}
+.input-area {padding:30px;background:#f8fbff;text-align:center;}
+textarea {width:95%;max-width:900px;height:200px;border:2px solid #E60012;border-radius:8px;padding:15px;font-size:16px;font-family:'Malgun Gothic',sans-serif;}
+.btn {margin-top:15px;padding:16px 40px;background:#E60012;color:white;border:none;border-radius:8px;font-size:18px;cursor:pointer;font-weight:bold;transition:all 0.3s;}
+.btn:hover {background:#C70011;transform:translateY(-2px);}
+.result-area {padding:30px;min-height:300px;}
+.log {text-align:center;padding:18px;background:#e3f2fd;color:#00695c;font-size:16px;border-radius:8px;margin-bottom:20px;}
+table {width:100%;border-collapse:collapse;margin-top:15px;box-shadow:0 3px 10px rgba(0,0,0,0.1);}
+th {background:#E60012;color:white;padding:15px;}
+td {padding:12px;border-bottom:1px solid #eee;text-align:center;}
+.status-done {background:#e8f5e8 !important;color:#1b5e20;font-weight:bold;}
+.status-ing {background:#fff8e1 !important;color:#e65100;font-weight:bold;}
+.status-wait {background:#e1f5fe !important;color:#01579b;}
+.status-fail {background:#ffebee !important;color:#c62828;}
+.btn-group {text-align:center;margin:40px 0;}
+.btn-save {padding:14px 35px;margin:10px;border:none;border-radius:50px;cursor:pointer;font-size:16px;font-weight:bold;transition:all 0.3s;}
+.btn-save.csv {background:#43a047;color:white;}
+.btn-save.excel {background:#fb8c00;color:white;}
+.btn-save:hover {transform:scale(1.05);box-shadow:0 5px 15px rgba(0,0,0,0.3);}
+footer {text-align:center;padding:20px;color:white;font-size:12px;}
+.progress-bar {width:100%;height:8px;background:#eee;border-radius:4px;overflow:hidden;margin:10px 0;}
+.progress-fill {height:100%;background:#E60012;transition:width 0.5s;}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+CJ대한통운 실시간 대량조회 (서버사이드 버전)
+<small>Vercel Functions 사용 · 안정적인 조회 · 엑셀/CSV 저장</small>
+</div>
+
+<div class="input-area">
+<textarea id="numbers" placeholder="송장번호를 한 줄에 하나씩 입력하세요 (최대 50개)
+예시:
+694695227666
+694695227670"></textarea>
+<button class="btn" onclick="start()">조회 시작</button>
+</div>
+
+<div class="result-area">
+<div id="log" class="log">송장번호를 입력하고 [조회 시작] 버튼을 눌러주세요</div>
+<div id="result"></div>
+</div>
+</div>
+
+<footer>
+CJ대한통운 대량조회 전용 사이트 · 언제 어디서나 무료 사용 가능
+</footer>
+
+<script>
+let allResults = [];
+
+async function queryTracking(trackingNumber) {
+try {
+// Vercel Function 호출
+const response = await fetch(`/api/cj-tracking?trackingNumber=${trackingNumber}`);
+const data = await response.json();
+    
+if (data.success) {
+return {
+status: data.status,
+location: data.location,
+progress: data.progress
+};
+} else {
+return {
+status: "조회실패",
+location: "오류",
+progress: 0
+};
+}
+} catch (error) {
+console.error('Query error:', error);
+return {
+status: "조회실패",
+location: "네트워크 오류",
+progress: 0
+};
+}
+}
+
+async function start() {
+const input = document.getElementById("numbers").value.trim();
+if (!input) return alert("송장번호를 입력해주세요!");
+const nums = input.split("\n").map(x=>x.trim()).filter(x=>x);
+
+if (nums.length > 50) {
+return alert("최대 50개까지만 조회 가능합니다!");
+}
+
+document.getElementById("result").innerHTML = `<table id="tbl"><tr><th>순번</th><th>송장번호</th><th>상태</th><th>위치</th><th>진행도</th></tr></table>`;
+document.getElementById("log").innerHTML = `<div class="log">조회 시작중... (총 ${nums.length}건)</div>`;
+allResults = [];
+const table = document.getElementById("tbl");
+
+for (let i = 0; i < nums.length; i++) {
+document.getElementById("log").innerHTML = `<div class="log">조회 중 → ${i+1}/${nums.length}</div>`;
+const res = await queryTracking(nums[i]);
+
+allResults.push({
+순번: i+1,
+송장번호: nums[i],
+상태: res.status,
+위치: res.location,
+진행도: res.progress + '%'
+});
+
+const row = table.insertRow();
+row.className = res.status.includes("완료")?'status-done':res.status.includes("배송중")?'status-ing':res.status.includes("터미널")?'status-wait':'';
+row.innerHTML = `<td>${i+1}</td><td><strong>${nums[i]}</strong></td><td>${res.status}</td><td>${res.location}</td>
+<td><div class="progress-bar"><div class="progress-fill" style="width:${res.progress}%"></div></div>${res.progress}%</td>`;
+
+// 요청 간격 (너무 빠르면 차단될 수 있음)
+await new Promise(r=>setTimeout(r, 800));
+}
+
+document.getElementById("log").innerHTML = `<div class="log" style="background:#e8f5e8">조회 완료! 총 ${nums.length}건 처리 완료</div>`;
+document.getElementById("result").innerHTML += `<div class="btn-group">
+<button class="btn-save csv" onclick="saveCSV()">CSV 저장</button>
+<button class="btn-save excel" onclick="saveExcel()">엑셀 저장</button>
+</div>`;
+}
+
+function saveCSV() {
+let csv = "\uFEFF순번,송장번호,상태,위치,진행도\n" + allResults.map(r=>`${r.순번},"${r.송장번호}","${r.상태}","${r.위치}","${r.진행도}"`).join("\n");
+const a = document.createElement("a");
+a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+a.download = `CJ대한통운_조회결과_${new Date().toISOString().slice(0,10)}.csv`;
+a.click();
+}
+
+function saveExcel() {
+const data = allResults.map(r=>({순번:r.순번,송장번호:r.송장번호,상태:r.상태,위치:r.위치,진행도:r.진행도}));
+const wb = XLSX.utils.book_new();
+const ws = XLSX.utils.json_to_sheet(data);
+ws["!cols"] = [{wch:8},{wch:16},{wch:12},{wch:20},{wch:12}];
+XLSX.utils.book_append_sheet(wb,ws,"CJ대한통운");
+XLSX.writeFile(wb,`CJ대한통운_조회결과_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+</script>
+</body>
+</html>
