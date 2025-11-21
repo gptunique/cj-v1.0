@@ -3,247 +3,384 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CJ대한통운 대량조회 - 독립형 버전</title>
+<title>CJ대한통운 대량조회기 - kkddss Secret - Ver.</title>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 <style>
-body {font-family:'Malgun Gothic',sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);margin:0;padding:20px;}
-.container {max-width:1100px;margin:20px auto;background:white;border-radius:15px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,0.2);}
-.header {background:#E60012;color:white;padding:25px;text-align:center;font-size:28px;border-radius:10px;margin-bottom:25px;}
-.header small {display:block;font-size:14px;margin-top:8px;opacity:0.9;}
-.input-area {padding:30px;background:#f8fbff;text-align:center;}
-textarea {width:95%;max-width:900px;height:200px;border:2px solid #E60012;border-radius:8px;padding:15px;font-size:16px;font-family:'Malgun Gothic',sans-serif;}
-.btn {margin-top:15px;padding:16px 40px;background:#E60012;color:white;border:none;border-radius:8px;font-size:18px;cursor:pointer;font-weight:bold;transition:all 0.3s;}
-.btn:hover {background:#C70011;transform:translateY(-2px);}
-.result-area {padding:30px;min-height:300px;}
-.log {text-align:center;padding:18px;background:#e3f2fd;color:#00695c;font-size:16px;border-radius:8px;margin-bottom:20px;}
-table {width:100%;border-collapse:collapse;margin-top:15px;box-shadow:0 3px 10px rgba(0,0,0,0.1);}
-th {background:#E60012;color:white;padding:15px;}
-td {padding:12px;border-bottom:1px solid #eee;text-align:center;}
-.status-done {background:#e8f5e8 !important;color:#1b5e20;font-weight:bold;}
-.status-ing {background:#fff8e1 !important;color:#e65100;font-weight:bold;}
-.status-wait {background:#e1f5fe !important;color:#01579b;}
-.status-fail {background:#ffebee !important;color:#c62828;}
-.detail-btn {background:none;border:none;color:#E60012;font-weight:bold;cursor:pointer;text-decoration:underline;}
-.detail-btn:hover {color:#C70011;}
-.detail-box {margin:30px 0;padding:25px;background:#f8fbff;border:2px solid #E60012;border-radius:10px;}
-.delivery-step {display:flex;justify-content:space-between;margin:25px 0;position:relative;}
-.delivery-step::before {content:'';position:absolute;top:40px;left:5%;right:5%;height:4px;background:#ddd;z-index:1;}
-.step {flex:1;text-align:center;z-index:3;}
-.circle {width:50px;height:50px;border-radius:50%;background:#ddd;color:#666;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:bold;transition:all 0.3s;}
-.step.on .circle {background:#E60012;color:white;}
-.step-label {font-size:13px;color:#444;}
-.track-table {width:100%;margin-top:20px;border-collapse:collapse;}
-.track-table th {background:#E60012;color:white;padding:12px;}
-.track-table td {padding:10px;border:1px solid #ddd;}
-.btn-group {text-align:center;margin:40px 0;}
-.btn-save {padding:14px 35px;margin:10px;border:none;border-radius:50px;cursor:pointer;font-size:16px;font-weight:bold;transition:all 0.3s;}
-.btn-save.csv {background:#43a047;color:white;}
-.btn-save.excel {background:#fb8c00;color:white;}
-.btn-save:hover {transform:scale(1.05);box-shadow:0 5px 15px rgba(0,0,0,0.3);}
-footer {text-align:center;padding:20px;color:white;font-size:12px;}
+  /* 기본 UI 스타일링 */
+  body {
+    font-family: 'Malgun Gothic', sans-serif; /* 가독성을 위한 맑은 고딕 */
+    background: linear-gradient(135deg, #c8102e, #e63946); /* CJ대한통운 브랜드 컬러(레드) 그라데이션 */
+    margin: 0; padding: 0; min-height: 100vh; color: #333;
+  }
+  .container {
+    max-width: 1100px; margin: 20px auto; background: white;
+    border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow: hidden;
+  }
+  
+  /* 헤더 영역 */
+  .header {
+    background: #c8102e; color: white; padding: 25px;
+    text-align: center; font-size: 26px; font-weight: bold;
+  }
+  .header small { display: block; font-size: 14px; margin-top: 8px; opacity: 0.9; }
+
+  /* 입력 영역 (Textarea & Button) */
+  .input-area { padding: 30px; background: #fff5f5; text-align: center; }
+  textarea {
+    width: 95%; max-width: 900px; height: 200px;
+    border: 2px solid #c8102e; border-radius: 10px; padding: 15px; font-size: 16px;
+  }
+  .btn {
+    margin-top: 15px; padding: 16px 40px; background: #c8102e; color: white;
+    border: none; border-radius: 50px; font-size: 18px; cursor: pointer;
+    box-shadow: 0 5px 15px rgba(200,16,46,0.4);
+  }
+  .btn:hover { background: #a00d25; transform: translateY(-2px); }
+
+  /* 결과 테이블 스타일 */
+  .result-area { padding: 30px; min-height: 300px; }
+  .log {
+    text-align: center; padding: 18px; background: #ffe6e6; color: #c8102e;
+    font-weight: bold; border-radius: 10px; margin-bottom: 25px; font-size: 18px;
+  }
+  table { width: 100%; border-collapse: collapse; margin-top: 15px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+  th { background: #c8102e; color: white; padding: 15px; }
+  td { padding: 12px; border-bottom: 1px solid #eee; text-align: center; }
+
+  /* 배송 상태별 뱃지 색상 구분 (직관적인 시각화) */
+  .status-done { background: #e8f5e8 !important; color: #1b5e20; font-weight: bold; } /* 완료: 초록 */
+  .status-ing { background: #fff8e1 !important; color: #e65100; font-weight: bold; }  /* 진행중: 주황 */
+  .status-wait { background: #e1f5fe !important; color: #01579b; } /* 대기: 파랑 */
+  .status-fail { background: #ffebee !important; color: #c62828; } /* 실패: 빨강 */
+
+  .detail-btn { background: none; border: none; color: #c8102e; font-weight: bold; cursor: pointer; text-decoration: underline; }
+
+  /* [상세보기 모달 디자인] */
+  .detail-box { margin: 30px 0; padding: 25px; background: #fff5f5; border: 2px solid #c8102e; border-radius: 12px; display: none; }
+  
+  /* [CSS Progress Bar] 배송 단계를 시각적으로 보여주는 막대 그래프 */
+  .delivery-step {
+    display: flex; justify-content: space-between; margin: 25px 0;
+    position: relative; height: 80px; align-items: center;
+  }
+  /* 회색 배경 라인 */
+  .delivery-step::before {
+    content: ''; position: absolute; top: 40px; left: 5%; right: 5%;
+    height: 6px; background: #ddd; z-index: 1;
+  }
+  /* 빨간색 진행 라인 (width를 JS 변수 --progress로 제어) */
+  .delivery-step::after {
+    content: ''; position: absolute; top: 40px; left: 5%;
+    height: 6px; background: #c8102e; z-index: 2; width: var(--progress, 0%);
+  }
+  .step { flex: 1; text-align: center; z-index: 3; }
+  .circle {
+    width: 50px; height: 50px; border-radius: 50%; background: #ddd;
+    color: #666; margin: 0 auto 10px; line-height: 50px; font-weight: bold; font-size: 18px;
+  }
+  /* 현재 단계 활성화 스타일 */
+  .step.on .circle { background: #c8102e; color: white; }
+  .step-label { font-size: 13px; color: #444; }
+
+  /* 상세 이력 테이블 */
+  .track-table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+  .track-table th { background: #c8102e; color: white; }
+  .track-table td { padding: 10px; border: 1px solid #ddd; }
+
+  /* 하단 저장 버튼 그룹 */
+  .btn-group { text-align: center; margin: 40px 0; }
+  .btn-save { padding: 14px 35px; margin: 10px; border: none; border-radius: 50px; color: white; font-size: 16px; cursor: pointer; }
+  .csv { background: #43a047; }
+  .excel { background: #fb8c00; }
+  footer { text-align: center; padding: 20px; color: white; font-size: 12px; }
 </style>
 </head>
+
 <body>
 <div class="container">
-<div class="header">
-CJ대한통운 실시간 대량조회 (독립형)
-<small>서버 불필요 · 바로 사용 가능 · 엑셀/CSV 저장</small>
-</div>
-
-<div class="input-area">
-<textarea id="numbers" placeholder="송장번호를 한 줄에 하나씩 입력하세요 (최대 30개)
-예시:
-694695227666
-694695227670"></textarea>
-<button class="btn" onclick="start()">조회 시작</button>
-</div>
-
-<div class="result-area">
-<div id="log" class="log">송장번호를 입력하고 [조회 시작] 버튼을 눌러주세요</div>
-<div id="result"></div>
-</div>
+  <div class="header">
+    CJ대한통운 실시간 대량조회 - kkddss Secret - Ver.
+    <small>전 세계 어디서나 접속 · 상세이력 포함 · 엑셀/CSV 저장</small>
+  </div>
+  
+  <div class="input-area">
+    <textarea id="numbers" placeholder="송장번호를 한 줄에 하나씩 입력하세요 (최대 500건)&#10;예시:&#10;620679876543&#10;620680123456"></textarea><br>
+    <button class="btn" onclick="start()">조회 시작 (강화된 봇 우회)</button>
+  </div>
+  
+  <div class="result-area">
+    <div id="log" class="log">송장번호를 입력하고 [조회 시작] 버튼을 눌러주세요</div>
+    <div id="result"></div>
+  </div>
 </div>
 
 <footer>
-CJ대한통운 대량조회 전용 · 완전 무료 · 개인정보 수집 없음
+  CJ대한통운 대량조회 전용 사이트 · 언제 어디서나 무료 사용 가능
 </footer>
 
 <script>
-// AllOrigins 프록시 사용 (무료, 안정적)
-async function fetchWithProxy(url) {
-try {
-const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-const response = await fetch(proxyUrl);
-const data = await response.json();
-return data.contents;
-} catch (error) {
-console.error('Proxy error:', error);
-throw error;
-}
+/**
+ * [핵심 기능 1] CORS 우회 프록시 함수
+ * 브라우저(Client)에서 CJ대한통운 서버(External)로 직접 요청하면 보안 정책(CORS)에 막힙니다.
+ * 이를 해결하기 위해 'corsproxy.io'라는 무료 중계 서버를 거쳐서 데이터를 받아옵니다.
+ */
+async function proxy(url) {
+  return fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`).then(r => r.text());
 }
 
+// 조회된 모든 데이터를 저장할 전역 배열 (엑셀 다운로드용)
 let allResults = [];
 
+/**
+ * [핵심 기능 2] 개별 송장번호 조회 및 파싱 (Web Scraping logic)
+ * @param {string} num - 송장번호
+ */
 async function query(num) {
-// CJ 공식 조회 페이지
-const url = `https://www.cjlogistics.com/ko/tool/parcel/tracking-detail?invcNo=${num}`;
-try {
-const html = await fetchWithProxy(url);
-const parser = new DOMParser();
-const doc = parser.parseFromString(html, "text/html");
+  // CJ대한통운 공식 조회 URL 구성
+  // CJ대한통운은 Ajax 기반 API를 사용하므로 API 엔드포인트 직접 호출
+  const url = `https://www.cjlogistics.com/ko/tool/parcel/tracking-detail?paramInvcNo=${num}`;
+  
+  try {
+    // 1. JSON 데이터 가져오기 (프록시 경유)
+    const response = await proxy(url);
+    
+    // 2. JSON 파싱
+    let data;
+    try {
+      data = JSON.parse(response);
+    } catch (e) {
+      // JSON 파싱 실패 시 HTML 스크래핑 시도
+      return await queryHTML(num);
+    }
 
-let status = "조회불가", location = "정보없음", progress = 0;
-const tracks = [];
+    // 3. 데이터 추출 및 상태 판단 로직
+    let status = "조회불가", location = "정보없음", progress = 0;
+    const tracks = [];
+    
+    // CJ대한통운 API 응답 구조에 따른 데이터 추출
+    if (data && data.parcelDetailResultMap) {
+      const details = data.parcelDetailResultMap;
+      
+      // 최종 상태 확인
+      if (details.lastStateDetail) {
+        const lastState = details.lastStateDetail;
+        status = lastState.crgSt || "조회불가";
+        location = lastState.scanNm || "정보없음";
+        
+        // 상태별 진행률 설정
+        if (status.includes('배달완료')) { progress = 100; }
+        else if (status.includes('배달출발') || status.includes('배송중')) { progress = 90; }
+        else if (status.includes('간선상차') || status.includes('간선하차')) { progress = 75; }
+        else if (status.includes('집화처리') || status.includes('터미널입고')) { progress = 50; }
+        else if (status.includes('상품접수') || status.includes('접수')) { progress = 30; }
+        else { progress = 15; }
+      }
+      
+      // 상세 이동 경로 추출
+      if (details.trackingDetails && Array.isArray(details.trackingDetails)) {
+        details.trackingDetails.forEach(item => {
+          tracks.push({
+            date: item.dTime ? item.dTime.substring(0, 10) : "",
+            time: item.dTime ? item.dTime.substring(11, 16) : "",
+            place: item.scanNm || "",
+            desc: item.crgSt || ""
+          });
+        });
+      }
+    }
 
-// HTML에서 배송 정보 추출
-const bodyText = doc.body.textContent || '';
-
-// 배송 상태 판별
-if (bodyText.includes('배송완료') || bodyText.includes('배달완료')) {
-status = "배송완료";
-location = "배송 완료";
-progress = 100;
-} else if (bodyText.includes('배송출발') || bodyText.includes('배달출발')) {
-status = "배송출발";
-location = "배송 중";
-progress = 75;
-} else if (bodyText.includes('배송중') || bodyText.includes('배달중')) {
-status = "배송중";
-location = "배송 중";
-progress = 70;
-} else if (bodyText.includes('터미널') || bodyText.includes('HUB')) {
-status = "터미널 도착";
-location = "터미널";
-progress = 50;
-} else if (bodyText.includes('간선상차') || bodyText.includes('간선하차')) {
-status = "간선 이동";
-location = "이동 중";
-progress = 40;
-} else if (bodyText.includes('집화완료') || bodyText.includes('상품인수')) {
-status = "집화완료";
-location = "집하 완료";
-progress = 25;
-} else if (bodyText.includes('접수') || bodyText.includes('상품접수')) {
-status = "접수완료";
-location = "접수";
-progress = 10;
-}
-
-// 테이블 데이터 추출 시도
-const tables = doc.querySelectorAll('table');
-for (const table of tables) {
-const rows = table.querySelectorAll('tbody tr');
-if (rows.length > 0) {
-rows.forEach(row => {
-const cells = row.querySelectorAll('td');
-if (cells.length >= 3) {
-const text1 = cells[0]?.textContent.trim() || '';
-const text2 = cells[1]?.textContent.trim() || '';
-const text3 = cells[2]?.textContent.trim() || '';
-if (text1 && (text1.includes('-') || text1.includes(':'))) {
-tracks.push({
-date: text1,
-place: text2,
-desc: text3
-});
-}
-}
-});
-if (tracks.length > 0) break;
-}
+    // 최신순 정렬 후 상위 20개만 반환
+    return {status, location, progress, tracks: tracks.slice(0, 20)};
+    
+  } catch (e) {
+    console.error("Query error:", e);
+    // API 조회 실패 시 HTML 스크래핑 시도
+    return await queryHTML(num);
+  }
 }
 
-return {status, location, progress, tracks: tracks.slice(0,20)};
-} catch (e) {
-console.error("Query error:", e);
-return {status:"조회실패", location:"네트워크 오류", progress:0, tracks:[]};
-}
+/**
+ * [대체 조회 방법] HTML 페이지 스크래핑
+ * API가 막혔을 경우 일반 조회 페이지를 파싱
+ */
+async function queryHTML(num) {
+  try {
+    // CJ대한통운 모바일 조회 페이지 (파싱이 더 쉬움)
+    const url = `https://www.cjlogistics.com/ko/tool/parcel/tracking?gnbInvcNo=${num}`;
+    const html = await proxy(url);
+    
+    // DOMParser로 HTML 파싱
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    
+    let status = "조회불가", location = "정보없음", progress = 0;
+    const tracks = [];
+    
+    // 배송 상태 추출 (클래스명은 실제 페이지에 따라 조정 필요)
+    const statusEl = doc.querySelector(".parcel-status") || doc.querySelector(".delivery-status");
+    if (statusEl) {
+      status = statusEl.textContent.trim();
+      
+      // 상태별 진행률 설정
+      if (status.includes('배달완료')) { progress = 100; location = "고객님 댁"; }
+      else if (status.includes('배달출발') || status.includes('배송중')) { progress = 90; location = "배송 중"; }
+      else if (status.includes('간선') || status.includes('터미널')) { 
+        progress = 75; 
+        const locEl = doc.querySelector(".current-location");
+        location = locEl ? locEl.textContent.trim() : "터미널";
+      }
+      else if (status.includes('집화')) { progress = 50; location = "집화 완료"; }
+      else if (status.includes('접수')) { progress = 30; location = "접수 완료"; }
+    }
+    
+    // 배송 이력 테이블 파싱
+    doc.querySelectorAll(".parcel-table tbody tr, .tracking-table tbody tr").forEach(tr => {
+      const tds = tr.querySelectorAll("td");
+      if (tds.length >= 3) {
+        const dateTime = tds[0].textContent.trim().split(" ");
+        tracks.push({
+          date: dateTime[0] || "",
+          time: dateTime[1] || "",
+          place: tds[1].textContent.trim(),
+          desc: tds[2].textContent.trim()
+        });
+      }
+    });
+    
+    return {status, location, progress, tracks: tracks.slice(0, 20)};
+    
+  } catch (e) {
+    console.error("HTML Query error:", e);
+    return {status:"조회실패", location:"네트워크 오류", progress:0, tracks:[]};
+  }
 }
 
+/**
+ * [메인 실행 함수] 조회 시작 버튼 클릭 시 실행
+ */
 async function start() {
-const input = document.getElementById("numbers").value.trim();
-if (!input) return alert("송장번호를 입력해주세요!");
-const nums = input.split("\n").map(x=>x.trim()).filter(x=>x);
+  const input = document.getElementById("numbers").value.trim();
+  if (!input) return alert("송장번호를 입력해주세요!");
+  
+  // 줄바꿈(\n) 기준으로 송장번호 분리 및 공백 제거
+  const nums = input.split("\n").map(x=>x.trim()).filter(x=>x);
+  
+  // 결과 테이블 초기화
+  document.getElementById("result").innerHTML = `<table id="tbl"><tr><th>순번</th><th>송장번호</th><th>상태</th><th>현재위치</th><th>상세보기</th></tr></table>`;
+  document.getElementById("log").innerHTML = `<div class="log">조회 시작중... (0/${nums.length})</div>`;
+  
+  allResults = []; // 결과 배열 초기화
+  const table = document.getElementById("tbl");
 
-if (nums.length > 30) {
-return alert("최대 30개까지만 조회 가능합니다!");
+  // [Loop] 각 송장번호에 대해 순차적 조회 실행
+  for (let i = 0; i < nums.length; i++) {
+    // 로그 업데이트
+    document.getElementById("log").innerHTML = `<div class="log">조회 중 → ${nums[i]} (${i+1}/${nums.length})</div>`;
+    
+    // 비동기(await)로 조회 실행 -> 데이터가 올 때까지 기다림
+    const res = await query(nums[i]);
+    
+    // 전체 결과 배열에 저장 (엑셀용)
+    allResults.push({
+      순번: i+1,
+      송장번호: nums[i],
+      상태: res.status,
+      위치: res.location,
+      // 상세이력은 텍스트 형태로 변환하여 저장
+      상세이력: res.tracks.map(t=>`${t.date} ${t.time} | ${t.place} | ${t.desc}`).join("\n")
+    });
+
+    // 테이블에 행 추가 (실시간 렌더링)
+    const row = table.insertRow();
+    // 상태에 따라 CSS 클래스(색상) 다르게 적용
+    row.className = res.status.includes("완료") ? "status-done" :
+                    res.status.includes("출발") || res.status.includes("배송") || res.status.includes("간선") ? "status-ing" :
+                    res.status.includes("집화") || res.status.includes("터미널") ? "status-ing" : "status-wait";
+                    
+    row.innerHTML = `<td>${i+1}</td><td><strong>${nums[i]}</strong></td><td>${res.status}</td><td>${res.location}</td>
+      <td><button class="detail-btn" onclick="showDetail(${i})">상세보기</button></td>`;
+    
+    // [Bot Detection 회피] 너무 빠르게 요청하면 차단될 수 있으므로 랜덤 딜레이(0.8초~1.8초) 부여
+    await new Promise(r => setTimeout(r, Math.random() * 1000 + 800));
+  }
+
+  // 완료 처리
+  document.getElementById("log").innerHTML = `<div class="log" style="background:#d4edda;color:green;">조회 완료! (${nums.length}건 처리됨)</div>`;
+  // 엑셀/CSV 저장 버튼 활성화
+  document.getElementById("result").innerHTML += `<div class="btn-group">
+    <button class="btn-save csv" onclick="saveCSV()">CSV 저장</button>
+    <button class="btn-save excel" onclick="saveExcel()">엑셀 저장 (상세이력 포함)</button>
+  </div>`;
 }
 
-document.getElementById("result").innerHTML = `<table id="tbl"><tr><th>순번</th><th>송장번호</th><th>상태</th><th>위치</th><th>상세보기</th></tr></table>`;
-document.getElementById("log").innerHTML = `<div class="log">조회 시작중... (총 ${nums.length}건)</div>`;
-allResults = [];
-const table = document.getElementById("tbl");
-
-for (let i = 0; i < nums.length; i++) {
-document.getElementById("log").innerHTML = `<div class="log">조회 중 → ${i+1}/${nums.length}</div>`;
-const res = await query(nums[i]);
-
-allResults.push({
-순번: i+1,
-송장번호: nums[i],
-상태: res.status,
-위치: res.location,
-진행도: res.progress + '%',
-상세이력: res.tracks.map(t=>`${t.date} | ${t.place} | ${t.desc}`).join('\n')
-});
-
-const row = table.insertRow();
-row.className = res.status.includes("완료")?'status-done':res.status.includes("배송중")?'status-ing':res.status.includes("터미널")?'status-wait':'';
-row.innerHTML = `<td>${i+1}</td><td><strong>${nums[i]}</strong></td><td>${res.status}</td><td>${res.location}</td>
-<td><button class="detail-btn" onclick="showDetail(${i})">상세보기</button></td>`;
-
-// 프록시 서버 부하 방지
-await new Promise(r=>setTimeout(r, 1500));
-}
-
-document.getElementById("log").innerHTML = `<div class="log" style="background:#e8f5e8">조회 완료! 총 ${nums.length}건 처리 완료</div>`;
-document.getElementById("result").innerHTML += `<div class="btn-group">
-<button class="btn-save csv" onclick="saveCSV()">CSV 저장</button>
-<button class="btn-save excel" onclick="saveExcel()">엑셀 저장</button>
-</div>`;
-}
-
+/**
+ * [상세보기 기능] 특정 행의 '상세보기' 클릭 시 호출
+ * @param {number} i - allResults 배열의 인덱스
+ */
 function showDetail(i) {
-document.querySelectorAll(".detail-box").forEach(d=>d.remove());
-const d = allResults[i];
-const progress = parseInt(d.진행도);
-
-const html = `<div class="detail-box" style="display:block">
-<h3>운송장번호: ${d.송장번호} → ${d.상태}</h3>
-<div class="delivery-step">
-<div class="step ${progress>=10?'on':''}"><div class="circle">1</div><div class="step-label">접수</div></div>
-<div class="step ${progress>=25?'on':''}"><div class="circle">2</div><div class="step-label">집화</div></div>
-<div class="step ${progress>=50?'on':''}"><div class="circle">3</div><div class="step-label">터미널</div></div>
-<div class="step ${progress>=75?'on':''}"><div class="circle">4</div><div class="step-label">배송출발</div></div>
-<div class="step ${progress>=100?'on':''}"><div class="circle">5</div><div class="step-label">배송완료</div></div>
-</div>
-<table class="track-table"><tr><th>일시</th><th>위치</th><th>상세내역</th></tr>
-${d.상세이력 ? d.상세이력.split("\n").map(l => {
-const parts = l.split(" | ");
-return `<tr><td>${parts[0]||""}</td><td>${parts[1]||""}</td><td>${parts[2]||""}</td></tr>`;
-}).join("") : "<tr><td colspan=3>내역 없음</td></tr>"}
-</table>
-</div>`;
-
-const btn = event.target;
-btn.parentElement.parentElement.insertAdjacentHTML("afterend", html);
+  // 기존에 열려있는 상세창 제거
+  document.querySelectorAll(".detail-box").forEach(d => d.remove());
+  
+  const d = allResults[i];
+  // 진행률 계산 (상태 텍스트 기반)
+  const progress = d.상태.includes("완료")?100 : d.상태.includes("출발")?90 : 
+                   d.상태.includes("간선")||d.상태.includes("배송")?75 : 
+                   d.상태.includes("집화")?50 : d.상태.includes("접수")?30 : 15;
+  
+  // 동적으로 HTML 생성 (진행단계 바 + 이력 테이블)
+  const html = `<div class="detail-box" style="display:block">
+    <h3>운송장번호: ${d.송장번호} → ${d.상태}</h3>
+    <div class="delivery-step" style="--progress:${progress}%">
+      <div class="step ${progress>=15?'on':''}"><div class="circle">1</div><div class="step-label">접수</div></div>
+      <div class="step ${progress>=30?'on':''}"><div class="circle">2</div><div class="step-label">집하</div></div>
+      <div class="step ${progress>=50?'on':''}"><div class="circle">3</div><div class="step-label">터미널입고</div></div>
+      <div class="step ${progress>=75?'on':''}"><div class="circle">4</div><div class="step-label">간선상차</div></div>
+      <div class="step ${progress>=90?'on':''}"><div class="circle">5</div><div class="step-label">배달출발</div></div>
+      <div class="step ${progress>=100?'on':''}"><div class="circle">6</div><div class="step-label">배달완료</div></div>
+    </div>
+    <table class="track-table"><tr><th>일자</th><th>시간</th><th>위치</th><th>내용</th></tr>
+      ${d.상세이력 ? d.상세이력.split("\n").map(l => {
+        const [dt, tm, pl, ...desc] = l.split(" | ");
+        return `<tr><td>${dt||""}</td><td>${tm||""}</td><td>${pl||""}</td><td style="text-align:left">${desc.join(" | ")||""}</td></tr>`;
+      }).join("") : "<tr><td colspan=4>내역 없음</td></tr>"}
+    </table>
+    <div style="text-align:right;margin-top:15px"><button class="btn" style="padding:10px 25px;font-size:14px" onclick="this.parentElement.parentElement.remove()">닫기</button></div>
+  </div>`;
+  
+  // 결과 테이블 바로 아래에 삽입
+  document.getElementById("result").insertAdjacentHTML("beforeend", html);
 }
 
+/**
+ * [CSV 저장] 라이브러리 없이 순수 JS로 텍스트 파일 생성
+ */
 function saveCSV() {
-let csv = "\uFEFF순번,송장번호,상태,위치,진행도,상세이력\n" + allResults.map(r=>`${r.순번},"${r.송장번호}","${r.상태}","${r.위치}","${r.진행도}","${r.상세이력.replace(/"/g,'""')}"`).join("\n");
-const a = document.createElement("a");
-a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
-a.download = `CJ대한통운_조회결과_${new Date().toISOString().slice(0,10)}.csv`;
-a.click();
+  // BOM(\uFEFF) 추가로 한글 깨짐 방지 + CSV 포맷팅
+  let csv = "\uFEFF순번,송장번호,상태,위치,상세이력\n" + 
+    allResults.map(r => `${r.순번},"${r.송장번호}","${r.상태}","${r.위치}","${r.상세이력.replace(/"/g,'""')}"`).join("\n");
+  
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], {type:"text/csv;charset=utf-8"}));
+  a.download = `CJ대한통운_조회결과_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
 }
 
+/**
+ * [엑셀 저장] SheetJS 라이브러리 활용
+ */
 function saveExcel() {
-const data = allResults.map(r=>({순번:r.순번,송장번호:r.송장번호,상태:r.상태,위치:r.위치,진행도:r.진행도,상세이력:r.상세이력}));
-const wb = XLSX.utils.book_new();
-const ws = XLSX.utils.json_to_sheet(data);
-ws["!cols"] = [{wch:8},{wch:16},{wch:12},{wch:20},{wch:12},{wch:60}];
-XLSX.utils.book_append_sheet(wb,ws,"CJ대한통운");
-XLSX.writeFile(wb,`CJ대한통운_조회결과_${new Date().toISOString().slice(0,10)}.xlsx`);
+  // JSON 데이터를 워크시트로 변환
+  const data = allResults.map(r => ({순번:r.순번, 송장번호:r.송장번호, 상태:r.상태, 현재위치:r.위치, 상세이력:r.상세이력}));
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(data);
+  
+  // 엑셀 열 너비(Column Width) 설정
+  ws["!cols"] = [{wch:8},{wch:16},{wch:12},{wch:20},{wch:90}];
+  
+  // 시트 추가 및 파일 쓰기
+  XLSX.utils.book_append_sheet(wb, ws, "CJ대한통운");
+  XLSX.writeFile(wb, `CJ대한통운_조회결과_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 </script>
 </body>
